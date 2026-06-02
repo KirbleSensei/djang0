@@ -50,4 +50,13 @@ class Command(BaseCommand):
         demo_user.is_superuser = False
         demo_user.save()
 
-        self.stdout.write(self.style.SUCCESS("Seeded demo data and demo user."))
+        admin_user, _ = User.objects.get_or_create(
+            username="admin",
+            defaults={"email": "admin@example.com"},
+        )
+        admin_user.set_password("admin12345")
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
+
+        self.stdout.write(self.style.SUCCESS("Seeded demo data, demo user, and admin user."))
