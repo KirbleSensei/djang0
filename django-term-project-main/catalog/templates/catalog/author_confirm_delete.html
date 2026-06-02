@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Delete author{% endblock %}
+{% block content %}
+  <div class="ui-panel card-body col-lg-7">
+    <div class="page-kicker">Confirm deletion</div>
+    <h1 class="h4 mb-3">Delete author</h1>
+    <p>Delete <strong>{{ object }}</strong>? Prefer removing the author from books first.</p>
+    <form method="post" class="mt-3">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Delete</button>
+      <a class="btn btn-outline-secondary" href="{% url 'catalog:author-detail' object.pk %}">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

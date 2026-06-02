@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Books{% endblock %}
+{% block content %}
+  <div class="library-hero">
+    <div>
+      <div class="page-kicker">Library catalog</div>
+      <h1 class="page-title">Browse the shelves</h1>
+      <p class="page-subtitle mt-3 mb-0">A gallery of the collection with cover art, author details, and live availability for each copy.</p>
+      <div class="hero-actions">
+        {% if user.is_staff %}
+          <a class="btn btn-primary" href="{% url 'catalog:book-create' %}">Add book</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn btn-outline-light" href="{% url 'catalog:loan-list' %}">View loans</a>
+        {% else %}
+          <a class="btn btn-outline-light" href="{% url 'catalog:login' %}">Log in</a>
+        {% endif %}
+      </div>
+      <div class="stat-strip">
+        <div class="stat-pill">
+          <strong>{{ book_count }}</strong>
+          <span>matching books</span>
+        </div>
+        <div class="stat-pill">
+          <strong>{{ page_obj.number|default:1 }}</strong>
+          <span>current page</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form method="get" class="filter-panel card-body mb-4">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label" for="id_q">{{ filter_form.q.label }}</label>
+        {{ filter_form.q.errors }}
+        <input type="text" name="q" id="id_q" class="form-control" value="{{ filter_form.q.value|default:'' }}"
+               placeholder="Title, ISBN, or author">
+      </div>
+      <div class="col-md-4">
+        <div class="form-check mt-md-4">
+          <input class="form-check-input" type="checkbox" name="available_only" id="id_available_only" value="1"
+                 {% if filter_form.available_only.value %}checked{% endif %}>
+          <label class="form-check-label" for="id_available_only">{{ filter_form.available_only.label }}</label>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="book-gallery">
+    {% for book in books %}
+      <a class="book-card" href="{% url 'catalog:book-detail' book.pk %}">
+        <div class="book-cover-frame">
+          {% if book.isbn %}
+            <img class="book-cover"
+                 src="https://covers.openlibrary.org/b/isbn/{{ book.isbn }}-L.jpg?default=false"
+                 alt="{{ book.title }} cover"
+                 loading="lazy"
+                 onerror="this.nextElementSibling.hidden=false; this.replaceWith(this.nextElementSibling)">
+          {% endif %}
+          <div class="cover-fallback" {% if book.isbn %}hidden{% endif %}>
+            <span class="cover-fallback-mark">Campus Library</span>
+            <span class="cover-fallback-title">{{ book.title }}</span>
+            <span class="cover-fallback-mark">{{ book.publication_year|default:"Catalog" }}</span>
+          </div>
+        </div>
+        <div class="book-card-body">
+          <div>
+            <h2 class="book-title">{{ book.title }}</h2>
+            <div class="book-meta mt-2">
+              {% for a in book.authors.all %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% empty %}&mdash;{% endfor %}
+              {% if book.publication_year %}<span>&middot; {{ book.publication_year }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="availability-row">
+            <span class="soft-badge">{{ book.total_copies|default:0 }} copies</span>
+            {% if book.available_copies|default:0 > 0 %}
+              <span class="soft-badge gold">{{ book.available_copies }} available</span>
+            {% else %}
+              <span class="soft-badge">0 available</span>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+    {% empty %}
+      <div class="ui-panel card-body text-center text-muted">No books match your filters.</div>
+    {% endfor %}
+  </div>
+
+  {% if is_paginated %}
+    <nav class="mt-4" aria-label="Book pagination">
+      <ul class="pagination justify-content-center flex-wrap">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link"
+             href="?{% if filter_querystring %}{{ filter_querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link"
+             href="?{% if filter_querystring %}{{ filter_querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}
