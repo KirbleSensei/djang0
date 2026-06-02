@@ -31,7 +31,10 @@ class BookQuerySet(models.QuerySet):
             total_copies=Count("copies", distinct=True),
             on_loan_copies=Count(
                 "copies",
-                filter=Q(copies__loans__returned_at__isnull=True),
+                filter=Q(
+                    copies__loans__isnull=False,
+                    copies__loans__returned_at__isnull=True,
+                ),
                 distinct=True,
             ),
             available_copies=ExpressionWrapper(
